@@ -6,10 +6,9 @@ import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 import corsOptions from './config/cors.config';
 import { connectDB } from './config/database';
+import { swaggerSpec } from './config/swagger';
 import { setupLogger } from './helpers/logger.helper';
 import { notFoundResponse, sendResponse, serverErrorResponse } from './helpers/response-helper';
-
-import { swaggerSpec } from './config/swagger';
 import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
 import productRoutes from './routes/product.routes';
@@ -23,6 +22,7 @@ const app = express();
 connectDB();
 
 app.use(cors(corsOptions));
+  
 app.use(process.env.NODE_ENV === 'production' ? morgan('combined') : morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

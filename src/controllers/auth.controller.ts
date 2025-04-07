@@ -147,12 +147,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const user = await UserModel.findOne({ email });
 
         if (!user) {
-            return sendResponse(res, errorResponse('Invalid credentials', HTTP_STATUS.UNAUTHORIZED));
+            return sendResponse(res, errorResponse('Sai tên đăng nhập hoặc mật khẩu', HTTP_STATUS.UNAUTHORIZED));
         }
 
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return sendResponse(res, errorResponse('Invalid credentials', HTTP_STATUS.UNAUTHORIZED));
+            return sendResponse(res, errorResponse('Sai tên đăng nhập hoặc mật khẩu', HTTP_STATUS.UNAUTHORIZED));
         }
 
         const secret = process.env.JWT_SECRET;
@@ -162,10 +162,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
         const token = generateToken(user);
 
-        sendResponse(res, successResponse('Login successful', { token, user }));
+        sendResponse(res, successResponse('Đăng nhập thành công', { token, user }));
     } catch (error) {
         console.error('Login error:', error);
-        sendResponse(res, serverErrorResponse('Failed to login'));
+        sendResponse(res, serverErrorResponse('Đăng nhập thất bại'));
     }
 };
 
