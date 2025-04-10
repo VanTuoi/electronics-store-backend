@@ -21,6 +21,9 @@ const app = express();
 
 connectDB();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(cors(corsOptions));
   
 app.use(process.env.NODE_ENV === 'production' ? morgan('combined') : morgan('dev'));
@@ -40,7 +43,7 @@ if (process.env.NODE_ENV !== 'production') {
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
 
-app.use((req, res) => {
+app.use((_, res) => {
     sendResponse(res, notFoundResponse('Route not found'));
 });
 

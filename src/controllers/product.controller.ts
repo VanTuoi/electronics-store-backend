@@ -265,13 +265,14 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         const uploadedImages = await ImageService.uploadMultipleImages(files);
         
         const body = { ...req.body };
-        if (body.features) {
+        
+        if (body.features && typeof body.features === 'string') {
             body.features = JSON.parse(body.features);
         }
-        if (body.specs) {
+        if (body.specs && typeof body.specs === 'string') {
             body.specs = JSON.parse(body.specs);
         }
-        if (body.dimensions) {
+        if (body.dimensions && typeof body.dimensions === 'string') {
             body.dimensions = JSON.parse(body.dimensions);
         }
         
@@ -517,14 +518,6 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
         const body = { ...req.body };
         if (body.category && !isValidObjectId(body.category)) {
             return sendResponse(res, badRequestResponse('Invalid category ID format'));
-        }
-
-        try {
-            if (body.features) body.features = JSON.parse(body.features);
-            if (body.specs) body.specs = JSON.parse(body.specs);
-            if (body.dimensions) body.dimensions = JSON.parse(body.dimensions);
-        } catch (error) {
-            return sendResponse(res, badRequestResponse('Invalid JSON format in request body'));
         }
 
         const existingProduct = await ProductModel.findById(id);

@@ -27,12 +27,12 @@ export class ImageService {
     }
 
     static async uploadMultipleImages(files: Express.Multer.File[]) {
-        const uploadPromises = files.map(file => this.uploadImage(file.path));
+        const uploadPromises = files?.map(file => this.uploadImage(file.path));
         return Promise.all(uploadPromises);
     }
 
     static async deleteMultipleImages(publicIds: string[]) {
-        const deletePromises = publicIds.map(publicId => this.deleteImage(publicId));
+        const deletePromises = publicIds?.map(publicId => this.deleteImage(publicId));
         return Promise.all(deletePromises);
     }
 }
