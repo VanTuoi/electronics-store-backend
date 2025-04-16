@@ -275,14 +275,34 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         if (body.dimensions && typeof body.dimensions === 'string') {
             body.dimensions = JSON.parse(body.dimensions);
         }
+
+        const coverUploadedImages = uploadedImages.map((img: ProductImage) => ({
+            url: img.url,
+            publicId: img.publicId,
+            isMain: false 
+        }))
+
+        if (req.body.mainImageIndex !== undefined) {
+            const mainIndex = parseInt(req.body.mainImageIndex);
         
+            if (!isNaN(mainIndex) && mainIndex >= 0 && mainIndex < coverUploadedImages.length) {
+                for (let i = 0; i < coverUploadedImages.length; i++){
+                    if (i === mainIndex){
+                        coverUploadedImages[i].isMain = true;
+                    } else {
+                        coverUploadedImages[i].isMain = false;
+                    }
+                }
+            }
+        }
+        
+        if (coverUploadedImages.length > 0 && !coverUploadedImages.some(img => img.isMain)) {
+            coverUploadedImages[0].isMain = true;
+        }
+
         const productData = {
             ...body,
-            images: uploadedImages.map((img: ProductImage, index: number) => ({
-                url: img.url,
-                publicId: img.publicId,
-                isMain: index === 0 
-            }))
+            images: coverUploadedImages
         };
 
         const product = await ProductModel.create(productData);
@@ -530,19 +550,9 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
         if (files && files.length > 0) {
             const newImages = await ImageService.uploadMultipleImages(files);
             
-            if (req.body.deleteImages) {
-                try {
-                    const deleteImageIds = JSON.parse(req.body.deleteImages);
-                    await ImageService.deleteMultipleImages(deleteImageIds);
-                    updatedImages = updatedImages.filter(img => !deleteImageIds.includes(img.publicId));
-                } catch (error) {
-                    console.error('Error parsing deleteImages:', error);
-                }
-            }
-
             updatedImages = [
                 ...updatedImages,
-                ...newImages.map(img => ({
+                ...newImages.map((img) => ({
                     url: img.url,
                     publicId: img.publicId,
                     isMain: false
@@ -550,6 +560,35 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
             ];
         }
 
+
+        if (req.body.deleteImages) {
+            try {
+                const deleteImageUrls = JSON.parse(req.body.deleteImages);
+                await ImageService.deleteMultipleImagesByUrls(deleteImageUrls);
+                updatedImages = updatedImages.filter(img => !deleteImageUrls.includes(img.url));
+            } catch (error) {
+                console.error('Error parsing deleteImages:', error);
+            }
+        }
+
+        if (req.body.mainImageIndex !== undefined) {
+            const mainIndex = parseInt(req.body.mainImageIndex);
+        
+            if (!isNaN(mainIndex) && mainIndex >= 0 && mainIndex < updatedImages.length) {
+                for (let i = 0; i < updatedImages.length; i++){
+                    if (i === mainIndex){
+                        updatedImages[i].isMain = true;
+                    } else {
+                    updatedImages[i].isMain = false;
+                    }
+                }
+            }
+        }
+        
+        if (updatedImages.length > 0 && !updatedImages.some(img => img.isMain)) {
+            updatedImages[0].isMain = true;
+        }
+        
         const updateData = {
             ...body,
             images: updatedImages

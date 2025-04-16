@@ -8,8 +8,7 @@ export class ImageService {
                 folder: 'products'
             });
             
-            fs.unlinkSync(filePath);
-            
+            fs.unlinkSync(filePath);            
             return {
                 url: result.secure_url,
                 publicId: result.public_id
@@ -33,6 +32,11 @@ export class ImageService {
 
     static async deleteMultipleImages(publicIds: string[]) {
         const deletePromises = publicIds?.map(publicId => this.deleteImage(publicId));
+        return Promise.all(deletePromises);
+    }
+
+    static async deleteMultipleImagesByUrls(urls: string[]) {
+        const deletePromises = urls?.map(url => this.deleteImage(url));
         return Promise.all(deletePromises);
     }
 }
