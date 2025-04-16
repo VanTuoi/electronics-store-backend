@@ -1,9 +1,5 @@
-/**
- * Override console methods in production
- */
 export const setupLogger = (): void => {
     if (process.env.NODE_ENV === 'production') {
-        // Save original console methods
         const originalConsole = {
             log: console.log,
             info: console.info,

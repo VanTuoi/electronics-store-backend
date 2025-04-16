@@ -15,8 +15,8 @@ const router = express.Router();
 router.get('/', productController.getProducts);
 router.get('/:id', productController.getProduct);
 
-router.post('/', verifyTokenMiddleware, verifyAdminRole, upload.array('images', 5), productController.createProduct);
-router.put('/:id', verifyTokenMiddleware, verifyAdminRole, upload.array('images', 5), productController.updateProduct);
+router.post('/', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), productController.createProduct);
+router.put('/:id', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), productController.updateProduct);
 router.delete('/:id', verifyTokenMiddleware, verifyAdminRole, productController.deleteProduct);
 
 export default router; 
