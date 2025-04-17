@@ -12,6 +12,7 @@ import { notFoundResponse, sendResponse, serverErrorResponse } from './helpers/r
 import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
 import productRoutes from './routes/product.routes';
+import scheduleRoutes from './routes/schedule.routes';
 
 config();
 
@@ -25,7 +26,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors(corsOptions));
-  
+
 app.use(process.env.NODE_ENV === 'production' ? morgan('combined') : morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -34,6 +35,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/schedules', scheduleRoutes);
 
 if (process.env.NODE_ENV !== 'production') {
     app.get('/swagger.json', (req, res) => {
