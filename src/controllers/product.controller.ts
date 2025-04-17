@@ -15,10 +15,12 @@ import { ProductImage } from '../types/product';
 
 interface ProductQuery {
     category?: string;
+    quantity?: { $gte?: number; $lte?: number };
     $or?: Array<{
-        [key: string]: { $regex: unknown; $options: string; }
+        [key: string]: { $regex: unknown; $options: string };
     }>;
 }
+
 
 /**
  * @swagger
@@ -358,34 +360,49 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
  */
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { category, search } = req.query;
+        const { categoryId, search, quantityFrom, quantityTo } = req.query;
         const query: ProductQuery = {};
 
-        if (category) {
-            if (!isValidObjectId(category as string)) {
-                return sendResponse(res, badRequestResponse('Invalid category ID format'));
+        if (categoryId) {
+            if (!isValidObjectId(categoryId as string)) {
+                return sendResponse(res, badRequestResponse("Invalid categoryId ID format"));
             }
-            query.category = category as string;
+            query.category = categoryId as string;
         }
 
-        if (search) {
+        if (search && typeof search === "string" && search.trim() !== "") {
             query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
+                { name: { $regex: search.trim(), $options: "i" } },
+                { description: { $regex: search.trim(), $options: "i" } },
             ];
         }
 
+        const quantityFilter: ProductQuery["quantity"] = {};
+        const from = parseInt(quantityFrom as string, 10);
+        const to = parseInt(quantityTo as string, 10);
+
+        if (!isNaN(from)) {
+            quantityFilter.$gte = from;
+        }
+
+        if (!isNaN(to)) {
+            quantityFilter.$lte = to;
+        }
+
+        if (Object.keys(quantityFilter).length > 0) {
+            query.quantity = quantityFilter;
+        }
+
         const products = await ProductModel.find(query)
-            .populate('category', 'name')
+            .populate("category", "name")
             .sort({ createdAt: -1 });
 
-        sendResponse(res, successResponse('Products retrieved successfully', products));
+        sendResponse(res, successResponse("Products retrieved successfully", products));
     } catch (error) {
-        console.error('Get products error:', error);
-        sendResponse(res, serverErrorResponse('Failed to fetch products'));
+        console.error("Get products error:", error);
+        sendResponse(res, serverErrorResponse("Failed to fetch products"));
     }
 };
-
 /**
  * @swagger
  * /api/products/{id}:
