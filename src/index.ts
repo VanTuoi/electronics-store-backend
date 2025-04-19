@@ -11,6 +11,7 @@ import { setupLogger } from './helpers/logger.helper';
 import { notFoundResponse, sendResponse, serverErrorResponse } from './helpers/response-helper';
 import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
+import orderRouter from './routes/order.routes';
 import productRoutes from './routes/product.routes';
 import scheduleRoutes from './routes/schedule.routes';
 
@@ -36,9 +37,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/schedules', scheduleRoutes);
+app.use('/api/orders', orderRouter);
 
 if (process.env.NODE_ENV !== 'production') {
-    app.get('/swagger.json', (req, res) => {
+    app.get('/swagger.json', (_, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.send(swaggerSpec);
     });

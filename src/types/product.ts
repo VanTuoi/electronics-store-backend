@@ -1,8 +1,7 @@
-export interface ProductImage {
+export type ProductImage = {
     url: string;
-    publicId: string;
     isMain?: boolean;
-}
+};
 
 export type ProductSpec = {
     key: string;
@@ -13,16 +12,19 @@ export type Product = {
     id: string;
     name: string;
     code?: string;
-    category: string;
+    category: {
+        name: string;
+        id: string;
+    };
     description?: string;
     usage?: string;
     features?: string[];
-
     price?: number;
     priceText?: string;
     discountPrice?: number;
     discountPercent?: number;
-    images: ProductImage[];
+    quantity?: number;
+    images?: ProductImage[];
     specs?: ProductSpec[];
 
     material?: string;
@@ -39,6 +41,7 @@ export type Product = {
     outputVoltage?: string;
 
     origin?: string;
+
     createdAt?: Date;
     updatedAt?: Date;
-}; 
+};
