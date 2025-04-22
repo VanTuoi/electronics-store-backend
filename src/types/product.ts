@@ -1,5 +1,6 @@
 export type ProductImage = {
     url: string;
+    publicId: string;
     isMain?: boolean;
 };
 

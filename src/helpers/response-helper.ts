@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { ApiError, ApiResponse } from "../types";
+import { ApiError, ApiResponse, PaginationMeta } from "../types";
 
 export const HTTP_STATUS = {
     OK: 200,
@@ -20,11 +20,13 @@ export const HTTP_STATUS = {
 export const successResponse = <T>(
     message: string,
     data?: T,
+    meta?: PaginationMeta,
     statusCode: number = HTTP_STATUS.OK
 ): ApiResponse<T> => ({
     success: true,
     message,
     data: data || null,
+    meta,
     statusCode
 });
 
@@ -68,5 +70,5 @@ export const badRequestResponse = (message: string, errors?: ApiError[]) =>
 export const serverErrorResponse = (message: string = 'Internal server error') => 
     errorResponse(message, HTTP_STATUS.INTERNAL_SERVER);
 
-export const createdResponse = <T>(message: string, data?: T) => 
-    successResponse(message, data, HTTP_STATUS.CREATED); 
+export const createdResponse = <T>(message: string, data?: T, meta?: PaginationMeta,) => 
+    successResponse(message, data, meta, HTTP_STATUS.CREATED); 

@@ -13,8 +13,9 @@ const router = express.Router();
  */
 
 router.get('/', productController.getProducts);
+router.get('/random', productController.getRandomProducts);
+router.get('/admin', verifyTokenMiddleware, verifyAdminRole, productController.getProductsForAdmin);
 router.get('/:id', productController.getProduct);
-
 router.post('/', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), productController.createProduct);
 router.put('/:id', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), productController.updateProduct);
 router.delete('/:id', verifyTokenMiddleware, verifyAdminRole, productController.deleteProduct);

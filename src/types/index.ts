@@ -21,10 +21,18 @@ export interface JwtPayload {
   role: 'admin' | 'user';
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  pages: number;
+  limit: number;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T | null;
+  meta?: PaginationMeta;
   statusCode: number;
   errors?: ApiError[];
 }
