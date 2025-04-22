@@ -14,7 +14,10 @@ import { ImageService } from '../services/image';
 import { ProductImage } from '../types/product';
 
 interface ProductQuery {
-    category?: string;
+    category?: string | { $in: string[] };
+    isHidden?: boolean;
+    price?: { $gte?: number; $lte?: number };
+    
     quantity?: { $gte?: number; $lte?: number };
     $or?: Array<{
         [key: string]: { $regex: unknown; $options: string };
@@ -360,8 +363,150 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
  */
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { categoryId, search, quantityFrom, quantityTo } = req.query;
+        const { 
+            categoryId, 
+            search, 
+            minPrice, 
+            maxPrice, 
+            sortBy, 
+            page = 1, 
+            limit = 10 
+        } = req.query;
+        
+        const query: ProductQuery = { isHidden: false };
+
+        if (categoryId) {
+            const categoryIds = Array.isArray(categoryId) ? categoryId : [categoryId];
+            for (const id of categoryIds) {
+                if (!isValidObjectId(id)) {
+                    return sendResponse(res, badRequestResponse("Invalid category ID format"));
+                }
+            }
+            query.category = { $in: categoryIds.map(id => String(id)) };
+        }
+
+        if (search && typeof search === "string" && search.trim() !== "") {
+            query.$or = [
+                { name: { $regex: search.trim(), $options: "i" } },
+                { description: { $regex: search.trim(), $options: "i" } },
+            ];
+        }
+
+        const priceFilter: any = {};
+        if (minPrice) priceFilter.$gte = parseFloat(minPrice as string);
+        if (maxPrice) priceFilter.$lte = parseFloat(maxPrice as string);
+        if (Object.keys(priceFilter).length > 0) query.price = priceFilter;
+
+        const sortOptions: any = {};
+        switch (sortBy) {
+            case 'price-asc':
+                sortOptions.price = 1;
+                break;
+            case 'price-desc':
+                sortOptions.price = -1;
+                break;
+            case 'newest':
+                sortOptions.createdAt = -1;
+                break;
+            case 'oldest':
+                sortOptions.createdAt = 1;
+                break;
+            default:
+                sortOptions.createdAt = -1;
+        }
+
+        const pageNumber = parseInt(page as string, 10);
+        const limitNumber = parseInt(limit as string, 10);
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const [products, total] = await Promise.all([
+            ProductModel.find(query)
+                .populate("category", "name")
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(limitNumber),
+            ProductModel.countDocuments(query)
+        ]);
+
+        sendResponse(res, successResponse("Products retrieved successfully",
+            products,{
+                total,
+                page: pageNumber,
+                pages: Math.ceil(total / limitNumber),
+                limit: limitNumber
+            }));
+    } catch (error) {
+        console.error("Get products error:", error);
+        sendResponse(res, serverErrorResponse("Failed to fetch products"));
+    }
+};
+
+/**
+ * @swagger
+ * /api/admin/products:
+ *   get:
+ *     summary: Get products for admin
+ *     tags: [Admin - Products]
+ *     parameters:
+ *       - in: query
+ *         name: categoryId
+ *         schema:
+ *           type: string
+ *         description: Category ID to filter by
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term for product name or description
+ *       - in: query
+ *         name: quantityFrom
+ *         schema:
+ *           type: integer
+ *         description: Minimum quantity to filter
+ *       - in: query
+ *         name: quantityTo
+ *         schema:
+ *           type: integer
+ *         description: Maximum quantity to filter
+ *       - in: query
+ *         name: showHidden
+ *         schema:
+ *           type: string
+ *           enum: [true, false]
+ *         description: Whether to show hidden products
+ *     responses:
+ *       200:
+ *         description: List of admin products retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Products retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Invalid category ID format
+ *       500:
+ *         description: Server error
+ */
+export const getProductsForAdmin = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { categoryId, search, quantityFrom, quantityTo, showHidden } = req.query;
         const query: ProductQuery = {};
+
+        if (showHidden === 'true') {
+            query.isHidden = true; 
+        } else if (showHidden === 'false') {
+            query.isHidden = false;
+        } 
 
         if (categoryId) {
             if (!isValidObjectId(categoryId as string)) {
@@ -403,6 +548,92 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
         sendResponse(res, serverErrorResponse("Failed to fetch products"));
     }
 };
+
+/**
+ * @swagger
+ * /api/products/random:
+ *   get:
+ *     summary: Get random products
+ *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of random products to return (default is 5)
+ *     responses:
+ *       200:
+ *         description: Random products retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Random products retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Invalid limit parameter
+ *       500:
+ *         description: Server error
+ */
+export const getRandomProducts = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { limit = 5 } = req.query;
+        const numLimit = Number(limit);
+
+        if (isNaN(numLimit) || numLimit <= 0) {
+            return sendResponse(res, badRequestResponse('Invalid limit parameter'));
+        }
+
+        const totalProducts = await ProductModel.countDocuments({ isHidden: false });
+
+        const actualLimit = numLimit > totalProducts ? totalProducts : numLimit;
+
+        const products = await ProductModel.aggregate([
+            { $match: { isHidden: false } },
+            { $sample: { size: actualLimit } },
+            { $sort: { priceText: -1 } },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category'
+                }
+            },
+            { $unwind: '$category' },
+            {
+                $addFields: {
+                    id: '$_id',
+                    'category.id': '$category._id'
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    'category._id': 0,
+                    '__v': 0,
+                    'category.__v': 0
+                }
+            }
+        ]);
+        
+
+        sendResponse(res, successResponse('Random products retrieved successfully', products));
+    } catch (error) {
+        console.error('Get random products error:', error);
+        sendResponse(res, serverErrorResponse('Failed to fetch random products'));
+    }
+};
+
 /**
  * @swagger
  * /api/products/{id}:
@@ -562,7 +793,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
             return sendResponse(res, notFoundResponse('Product not found'));
         }
 
-        let updatedImages = [...existingProduct.images];
+        let updatedImages = [...(existingProduct.images || [])];
 
         if (files && files.length > 0) {
             const newImages = await ImageService.uploadMultipleImages(files);

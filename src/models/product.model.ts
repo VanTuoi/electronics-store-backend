@@ -43,7 +43,8 @@ const productSchema = new mongoose.Schema({
     inputVoltage: String,
     outputVoltage: String,
 
-    origin: String
+    origin: String,
+    isHidden: { type: Boolean, default: false }
 }, {
     timestamps: true,
     toJSON: {
