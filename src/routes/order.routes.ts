@@ -17,10 +17,9 @@ const router = express.Router();
  *   description: Order management
  */
 
-router.post('/', createOrder);
-
+router.get('/:id', getOrder);
 router.get('/', verifyTokenMiddleware, verifyAdminRole, getOrders);
-router.get('/:id', verifyTokenMiddleware, verifyAdminRole, getOrder);
+router.post('/', createOrder);
 router.put('/:id', verifyTokenMiddleware, verifyAdminRole, updateOrder);
 router.delete('/:id', verifyTokenMiddleware, verifyAdminRole, deleteOrder);
 
