@@ -8,7 +8,7 @@ import corsOptions from './config/cors.config';
 import { connectDB } from './config/database';
 import { swaggerSpec } from './config/swagger';
 import { setupLogger } from './helpers/logger.helper';
-import { notFoundResponse, sendResponse, serverErrorResponse } from './helpers/response-helper';
+import { notFoundResponse, sendResponse, serverErrorResponse, successResponse } from './helpers/response-helper';
 import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
 import orderRouter from './routes/order.routes';
@@ -46,6 +46,10 @@ if (process.env.NODE_ENV !== 'production') {
     });
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
+
+app.use('/hello', (req, res) => {
+    sendResponse(res, successResponse('Hello world!'));
+});
 
 app.use((_, res) => {
     sendResponse(res, notFoundResponse('Route not found'));
