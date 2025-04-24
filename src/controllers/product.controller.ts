@@ -160,10 +160,10 @@ interface ProductQuery {
  * @swagger
  * /api/products:
  *   post:
- *     summary: Create a new product
+ *     summary: Create a new product (Admin only)
  *     tags: [Products]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -329,7 +329,7 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
  *     tags: [Products]
  *     parameters:
  *       - in: query
- *         name: category
+ *         name: categoryId
  *         schema:
  *           type: string
  *         description: Category ID to filter by
@@ -338,6 +338,34 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
  *         schema:
  *           type: string
  *         description: Search term for product name or description
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum price to filter
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum price to filter
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [price-asc, price-desc, newest, oldest]
+ *         description: Sort option for products
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of products per page
  *     responses:
  *       200:
  *         description: List of products retrieved successfully
@@ -356,6 +384,21 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Product'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 100
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     pages:
+ *                       type: integer
+ *                       example: 10
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
  *       400:
  *         description: Invalid category ID
  *       500:
@@ -445,8 +488,10 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
  * @swagger
  * /api/admin/products:
  *   get:
- *     summary: Get products for admin
+ *     summary: Get products for admin (Admin only)
  *     tags: [Admin - Products]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: categoryId
@@ -662,19 +707,46 @@ export const getRandomProducts = async (req: Request, res: Response): Promise<vo
  *                   type: string
  *                   example: Product retrieved successfully
  *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     # ... other product properties
+ *                   $ref: '#/components/schemas/Product'
  *       400:
  *         description: Invalid product ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid product ID format
  *       404:
  *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Product not found
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Failed to fetch product
  */
 export const getProduct = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -702,10 +774,10 @@ export const getProduct = async (req: Request, res: Response): Promise<void> => 
  * @swagger
  * /api/products/{id}:
  *   put:
- *     summary: Update a product
+ *     summary: Update a product (Admin only)
  *     tags: [Products]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -862,10 +934,10 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
  * @swagger
  * /api/products/{id}:
  *   delete:
- *     summary: Delete a product
+ *     summary: Delete a product (Admin only)
  *     tags: [Products]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id

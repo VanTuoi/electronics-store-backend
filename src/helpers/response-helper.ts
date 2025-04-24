@@ -60,7 +60,6 @@ export const sendResponse = <T>(
     res.status(response.statusCode).json(response);
 };
 
-// Utility functions for common responses
 export const notFoundResponse = (message: string = 'Resource not found') => 
     errorResponse(message, HTTP_STATUS.NOT_FOUND);
 

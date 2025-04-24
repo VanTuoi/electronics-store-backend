@@ -18,123 +18,150 @@ dotenv.config();
 /**
  * @swagger
  * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *       description: JWT token for authentication
+ * 
  *   schemas:
  *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "5f8d04b3ab35de3d342acd4f"
+ *           description: Auto-generated unique identifier
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "user@example.com"
+ *           description: User's email address (unique)
+ *         role:
+ *           type: string
+ *           enum: [user, admin]
+ *           default: user
+ *           example: "user"
+ *           description: User role determining access level
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2023-01-01T00:00:00Z"
+ *           description: Timestamp when user was created
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2023-01-01T00:00:00Z"
+ *           description: Timestamp when user was last updated
+ * 
+ *     LoginRequest:
  *       type: object
  *       required:
  *         - email
  *         - password
  *       properties:
- *         id:
- *           type: string
- *           description: User ID
  *         email:
  *           type: string
  *           format: email
- *           description: User email
+ *           example: "admin@example.com"
+ *           description: Registered email address
  *         password:
  *           type: string
  *           format: password
- *           description: User password (hashed)
- *         role:
+ *           example: "password123"
+ *           description: Account password
+ * 
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         token:
  *           type: string
- *           enum: [user, admin]
- *           description: User role
- *         createdAt:
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *           description: JWT token for authenticated requests
+ *         user:
+ *           $ref: '#/components/schemas/User'
+ * 
+ *     ChangePasswordRequest:
+ *       type: object
+ *       required:
+ *         - currentPassword
+ *         - newPassword
+ *       properties:
+ *         currentPassword:
  *           type: string
- *           format: date-time
- *         updatedAt:
+ *           format: password
+ *           example: "oldPassword123"
+ *           description: Current account password
+ *         newPassword:
  *           type: string
- *           format: date-time
+ *           format: password
+ *           example: "newPassword456"
+ *           minLength: 6
+ *           description: New password (min 6 characters)
+ * 
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: integer
+ *           example: 400
+ *         message:
+ *           type: string
+ *           example: "Invalid request parameters"
+ * 
+ * tags:
+ *   - name: Authentication
+ *     description: User authentication and authorization
  */
 
 /**
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Login to the application
  *     tags: [Authentication]
+ *     summary: Authenticate user
+ *     description: Verify user credentials and return JWT token
+ *     operationId: login
  *     requestBody:
+ *       description: User credentials
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 description: User email address
- *                 example: admin@example.com
- *               password:
- *                 type: string
- *                 format: password
- *                 description: User password
- *                 example: "********"
+ *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Successful authentication
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: Login successful
- *                 data:
- *                   type: object
- *                   properties:
- *                     token:
- *                       type: string
- *                       description: JWT token for authentication
- *                     user:
- *                       $ref: '#/components/schemas/User'
+ *               $ref: '#/components/schemas/LoginResponse'
  *       400:
- *         description: Missing required fields
+ *         description: Invalid input
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: Email and password are required
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: Invalid credentials
+ *         description: Unauthorized
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 401
  *                 message:
  *                   type: string
- *                   example: Invalid credentials
+ *                   example: "Invalid credentials"
  *       500:
- *         description: Server error
+ *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: Failed to login
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -173,30 +200,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
  * @swagger
  * /api/auth/change-password:
  *   post:
- *     summary: Change user password
  *     tags: [Authentication]
+ *     summary: Change user password
+ *     description: Change password after verifying current password
+ *     operationId: changePassword
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     requestBody:
+ *       description: Current and new password
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - currentPassword
- *               - newPassword
- *             properties:
- *               currentPassword:
- *                 type: string
- *                 format: password
- *                 description: Current user password
- *                 example: "********"
- *               newPassword:
- *                 type: string
- *                 format: password
- *                 description: New password to set
- *                 example: "********"
+ *             $ref: '#/components/schemas/ChangePasswordRequest'
  *     responses:
  *       200:
  *         description: Password changed successfully
@@ -206,37 +222,30 @@ export const login = async (req: Request, res: Response): Promise<void> => {
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Password updated successfully
+ *                   example: "Password updated successfully"
  *       400:
- *         description: Missing required fields
+ *         description: Invalid input
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: Current password and new password are required
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: Current password is incorrect
+ *         description: Unauthorized (invalid current password or token)
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 401
  *                 message:
  *                   type: string
- *                   example: Current password is incorrect
+ *                   example: "Current password is incorrect"
  *       404:
  *         description: User not found
  *         content:
@@ -245,24 +254,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 404
  *                 message:
  *                   type: string
- *                   example: User not found
+ *                   example: "User not found"
  *       500:
- *         description: Server error
+ *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: Failed to change password
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 export const changePassword = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {

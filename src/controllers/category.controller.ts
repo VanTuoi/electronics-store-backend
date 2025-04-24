@@ -21,46 +21,74 @@ import { CategoryModel } from '../models/category.model';
  *       properties:
  *         id:
  *           type: string
- *           description: Category ID
+ *           example: "5f8d04b3ab35de3d342acd4f"
+ *           description: Auto-generated unique identifier
  *         name:
  *           type: string
- *           description: Category name
+ *           example: "Electronics"
+ *           description: Category name (unique)
  *         description:
  *           type: string
- *           description: Category description
+ *           example: "Electronic devices and accessories"
+ *           description: Optional category description
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           example: "2023-01-01T00:00:00Z"
+ *           description: Timestamp when category was created
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           example: "2023-01-01T00:00:00Z"
+ *           description: Timestamp when category was last updated
+ * 
+ *     CategoryRequest:
+ *       type: object
+ *       required:
+ *         - name
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: "Electronics"
+ *           description: Category name
+ *         description:
+ *           type: string
+ *           example: "Electronic devices and accessories"
+ *           description: Optional category description
+ * 
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: integer
+ *           example: 400
+ *         message:
+ *           type: string
+ *           example: "Invalid request parameters"
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Categories
+ *     description: Product categories management
  */
 
 /**
  * @swagger
  * /api/categories:
  *   post:
- *     summary: Create a new category
  *     tags: [Categories]
+ *     summary: Create a new category
+ *     description: Create a new product category
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *                 description: Category name
- *                 example: "Electronics"
- *               description:
- *                 type: string
- *                 description: Category description
- *                 example: "Electronic devices and accessories"
+ *             $ref: '#/components/schemas/CategoryRequest'
  *     responses:
  *       201:
  *         description: Category created successfully
@@ -70,11 +98,11 @@ import { CategoryModel } from '../models/category.model';
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 201
  *                 message:
  *                   type: string
- *                   example: Category created successfully
+ *                   example: "Category created successfully"
  *                 data:
  *                   $ref: '#/components/schemas/Category'
  *       400:
@@ -82,26 +110,11 @@ import { CategoryModel } from '../models/category.model';
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 400
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
  *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: Failed to create category
+ *         description: Internal server error
  */
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -117,8 +130,9 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
  * @swagger
  * /api/categories:
  *   get:
- *     summary: Get all categories
  *     tags: [Categories]
+ *     summary: Get all categories
+ *     description: Retrieve a list of all product categories
  *     responses:
  *       200:
  *         description: List of categories retrieved successfully
@@ -128,28 +142,21 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Categories retrieved successfully
+ *                   example: "Categories retrieved successfully"
  *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Category'
  *       500:
- *         description: Server error
+ *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: Failed to fetch categories
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 export const getCategories = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -165,14 +172,16 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
  * @swagger
  * /api/categories/{id}:
  *   get:
- *     summary: Get a category by ID
  *     tags: [Categories]
+ *     summary: Get a category by ID
+ *     description: Retrieve details of a specific category
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *           example: "5f8d04b3ab35de3d342acd4f"
  *         description: Category ID
  *     responses:
  *       200:
@@ -183,11 +192,11 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Category retrieved successfully
+ *                   example: "Category retrieved successfully"
  *                 data:
  *                   $ref: '#/components/schemas/Category'
  *       400:
@@ -195,27 +204,11 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: Invalid category ID format
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Category not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: Category not found
+ *       500:
+ *         description: Internal server error
  */
 export const getCategory = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -242,32 +235,25 @@ export const getCategory = async (req: Request, res: Response): Promise<void> =>
  * @swagger
  * /api/categories/{id}:
  *   put:
- *     summary: Update a category
  *     tags: [Categories]
+ *     summary: Update a category
+ *     description: Update details of an existing category
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *           example: "5f8d04b3ab35de3d342acd4f"
  *         description: Category ID
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 description: Category name
- *                 example: "Updated Electronics"
- *               description:
- *                 type: string
- *                 description: Category description
- *                 example: "Updated description for electronic devices"
+ *             $ref: '#/components/schemas/CategoryRequest'
  *     responses:
  *       200:
  *         description: Category updated successfully
@@ -277,19 +263,21 @@ export const getCategory = async (req: Request, res: Response): Promise<void> =>
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Category updated successfully
+ *                   example: "Category updated successfully"
  *                 data:
  *                   $ref: '#/components/schemas/Category'
  *       400:
- *         description: Invalid category ID format
+ *         description: Invalid input data
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Category not found
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 export const updateCategory = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -320,16 +308,18 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
  * @swagger
  * /api/categories/{id}:
  *   delete:
- *     summary: Delete a category
  *     tags: [Categories]
+ *     summary: Delete a category
+ *     description: Delete an existing category
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *           example: "5f8d04b3ab35de3d342acd4f"
  *         description: Category ID
  *     responses:
  *       200:
@@ -340,17 +330,19 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Category deleted successfully
+ *                   example: "Category deleted successfully"
  *       400:
  *         description: Invalid category ID format
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Category not found
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 export const deleteCategory = async (req: Request, res: Response): Promise<void> => {
     try {

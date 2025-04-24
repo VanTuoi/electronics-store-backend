@@ -1,5 +1,5 @@
 import express from 'express';
-import * as productController from '../controllers/product.controller';
+import { createProduct, deleteProduct, getProduct, getProducts, getProductsForAdmin, getRandomProducts, updateProduct } from '../controllers/product.controller';
 import { verifyAdminRole, verifyTokenMiddleware } from '../middlewares/authentication';
 import { upload } from '../middlewares/upload.middleware';
 
@@ -12,12 +12,12 @@ const router = express.Router();
  *   description: Product management
  */
 
-router.get('/', productController.getProducts);
-router.get('/random', productController.getRandomProducts);
-router.get('/admin', verifyTokenMiddleware, verifyAdminRole, productController.getProductsForAdmin);
-router.get('/:id', productController.getProduct);
-router.post('/', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), productController.createProduct);
-router.put('/:id', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), productController.updateProduct);
-router.delete('/:id', verifyTokenMiddleware, verifyAdminRole, productController.deleteProduct);
+router.get('/:id', getProduct);
+router.get('/', getProducts);
+router.get('/random', getRandomProducts);
+router.get('/admin', verifyTokenMiddleware, verifyAdminRole, getProductsForAdmin);
+router.post('/', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), createProduct);
+router.put('/:id', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), updateProduct);
+router.delete('/:id', verifyTokenMiddleware, verifyAdminRole, deleteProduct);
 
 export default router; 

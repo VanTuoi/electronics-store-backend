@@ -7,12 +7,11 @@ A Node.js backend application for an electronics store, built with Express.js, T
 - MongoDB Atlas integration
 - Docker deployment support
 - Authentication with JWT
-- Admin user management
 - Product management
 - Category management
-- Order management (prepared for implementation)
+- Order management
+- Consultation requests
 - Promotion management (prepared for implementation)
-- Consultation requests (prepared for implementation)
 
 ## Prerequisites
 
@@ -68,6 +67,8 @@ CLOUDINARY_API_SECRET=your_api_secret
 ### Products
 - GET /api/products - Get all products
 - GET /api/products/:id - Get product by ID
+- GET /api/products/random - Get random
+- GET /api/products/admin - Get for admin (admin only)
 - POST /api/products - Create product (admin only)
 - PUT /api/products/:id - Update product (admin only)
 - DELETE /api/products/:id - Delete product (admin only)
@@ -78,6 +79,20 @@ CLOUDINARY_API_SECRET=your_api_secret
 - POST /api/categories - Create category (admin only)
 - PUT /api/categories/:id - Update category (admin only)
 - DELETE /api/categories/:id - Delete category (admin only)
+
+### Orders
+- GET /api/orders - Get all orders (admin only)
+- GET /api/orders/:id - Get orders by ID
+- POST /api/orders - Create orders
+- PUT /api/orders/:id - Update orders (admin only)
+- DELETE /api/orders/:id - Delete orders (admin only)
+
+### Schedules
+- GET /api/schedules - Get all schedules (admin only)
+- GET /api/schedules/:id - Get schedules by ID (admin only)
+- POST /api/schedules - Create schedules
+- PUT /api/schedules/:id - Update schedules (admin only)
+- DELETE /api/schedules/:id - Delete schedules (admin only)
 
 ## Default Admin Account
 

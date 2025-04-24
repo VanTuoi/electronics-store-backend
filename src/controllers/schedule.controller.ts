@@ -61,8 +61,6 @@ interface ScheduleQuery {
  *   post:
  *     summary: Create a new schedule
  *     tags: [Schedules]
- *     security:
- *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -149,8 +147,10 @@ export const createSchedule = async (req: Request, res: Response): Promise<void>
  * @swagger
  * /api/schedules:
  *   get:
- *     summary: Get all schedules
+ *     summary: Get all schedules (Admin only)
  *     tags: [Schedules]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of schedules retrieved successfully
@@ -292,10 +292,10 @@ export const getSchedule = async (req: Request, res: Response): Promise<void> =>
  * @swagger
  * /api/schedules/{id}:
  *   put:
- *     summary: Update a schedule
+ *     summary: Update a schedule (Admin only)
  *     tags: [Schedules]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -382,10 +382,10 @@ export const updateSchedule = async (req: Request, res: Response): Promise<void>
  * @swagger
  * /api/schedules/{id}:
  *   delete:
- *     summary: Delete a schedule
+ *     summary: Delete a schedule (Admin only)
  *     tags: [Schedules]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
