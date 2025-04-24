@@ -81,6 +81,18 @@ import { Product } from "../types/product";
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/Order'
+ *           example:
+ *             name: "Nguyen Van A"
+ *             phone: "0987654321"
+ *             address: "123 Đường ABC, Quận 1, TP.HCM"
+ *             email: "customer@example.com"
+ *             note: "Giao hàng giờ hành chính"
+ *             products:
+ *               - id: "507f1f77bcf86cd799439011"
+ *                 quantity: 2
+ *               - id: "507f1f77bcf86cd799439012"
+ *                 quantity: 1
+ *             shippingFee: 30000
  *     responses:
  *       201:
  *         description: Order created successfully
@@ -98,7 +110,37 @@ import { Product } from "../types/product";
  *                 data:
  *                   $ref: '#/components/schemas/Order'
  *       400:
- *         description: Invalid input data
+ *         description: |
+ *           Invalid input data or stock issues. Possible errors:
+ *           - Invalid or empty products array
+ *           - Product not found
+ *           - Insufficient stock
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 400
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Vấn đề về tồn kho sản phẩm
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       productId:
+ *                         type: string
+ *                       issue:
+ *                         type: string
+ *                         enum: [not_found, insufficient_stock]
+ *                       message:
+ *                         type: string
  *       500:
  *         description: Server error
  */
@@ -210,14 +252,15 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         return sendResponse(res, serverErrorResponse('Đặt hàng thất bại'));
     }
 };
+
 /**
  * @swagger
  * /api/orders:
  *   get:
- *     summary: Get all orders
+ *     summary: Get all orders (Admin only)
  *     tags: [Orders]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: status
@@ -225,6 +268,17 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
  *           type: string
  *           enum: [pending, confirmed, completed, cancelled]
  *         description: Filter by order status
+ *         example: pending
+ *       - in: query
+ *         name: orderId
+ *         schema:
+ *           type: string
+ *         description: Filter by order ID
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by customer name, phone, email or product name
  *     responses:
  *       200:
  *         description: List of orders
@@ -243,6 +297,8 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Order'
+ *       401:
+ *         description: Unauthorized - Admin access required
  *       500:
  *         description: Server error
  */
@@ -321,8 +377,6 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
  *   get:
  *     summary: Get order by ID
  *     tags: [Orders]
- *     security:
- *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -369,10 +423,10 @@ export const getOrder = async (req: Request, res: Response): Promise<void> => {
  * @swagger
  * /api/orders/{id}:
  *   put:
- *     summary: Update order status
+ *     summary: Update order status (Admin only)
  *     tags: [Orders]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -380,6 +434,7 @@ export const getOrder = async (req: Request, res: Response): Promise<void> => {
  *         schema:
  *           type: string
  *         description: Order ID
+ *         example: 507f1f77bcf86cd799439011
  *     requestBody:
  *       required: true
  *       content:
@@ -390,8 +445,10 @@ export const getOrder = async (req: Request, res: Response): Promise<void> => {
  *               status:
  *                 type: string
  *                 enum: [pending, confirmed, completed, cancelled]
+ *                 example: confirmed
  *               adminNote:
  *                 type: string
+ *                 example: "Đã xác nhận với khách hàng qua điện thoại"
  *     responses:
  *       200:
  *         description: Order updated
@@ -401,6 +458,8 @@ export const getOrder = async (req: Request, res: Response): Promise<void> => {
  *               $ref: '#/components/schemas/Order'
  *       400:
  *         description: Invalid input
+ *       401:
+ *         description: Unauthorized - Admin access required
  *       404:
  *         description: Order not found
  *       500:
@@ -438,10 +497,10 @@ export const updateOrder = async (req: Request, res: Response): Promise<void> =>
  * @swagger
  * /api/orders/{id}:
  *   delete:
- *     summary: Delete an order
+ *     summary: Delete an order (Admin only)
  *     tags: [Orders]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -449,11 +508,31 @@ export const updateOrder = async (req: Request, res: Response): Promise<void> =>
  *         schema:
  *           type: string
  *         description: Order ID
+ *         example: 507f1f77bcf86cd799439011
  *     responses:
  *       200:
- *         description: Order deleted
+ *         description: Order deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 statusCode:
+ *                   type: number
+ *                   example: 200
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 message:
+ *                   type: string
+ *                   example: Order deleted successfully
  *       400:
- *         description: Invalid order ID
+ *         description: Invalid order ID format
+ *       401:
+ *         description: Unauthorized - Admin access required
  *       404:
  *         description: Order not found
  *       500:

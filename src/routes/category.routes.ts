@@ -19,7 +19,6 @@ const router = express.Router();
 
 router.get('/', getCategories);
 router.get('/:id', getCategory);
-
 router.post('/', verifyTokenMiddleware, verifyAdminRole, createCategory);
 router.put('/:id', verifyTokenMiddleware, verifyAdminRole, updateCategory);
 router.delete('/:id', verifyTokenMiddleware, verifyAdminRole, deleteCategory);
