@@ -12,10 +12,10 @@ const router = express.Router();
  *   description: Product management
  */
 
+router.get('/admin', verifyTokenMiddleware, verifyAdminRole, getProductsForAdmin);
+router.get('/random', getRandomProducts);
 router.get('/:id', getProduct);
 router.get('/', getProducts);
-router.get('/random', getRandomProducts);
-router.get('/admin', verifyTokenMiddleware, verifyAdminRole, getProductsForAdmin);
 router.post('/', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), createProduct);
 router.put('/:id', verifyTokenMiddleware, verifyAdminRole, upload.array('files[]', 10), updateProduct);
 router.delete('/:id', verifyTokenMiddleware, verifyAdminRole, deleteProduct);
